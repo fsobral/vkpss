@@ -1,0 +1,17 @@
+*~
+*.o
+*.mod
+bin/**
+lib/**
+
+# ALGENCAN's files
+.silent
+
+# Output files and HS test files
+*.out
+analysis-all
+
+# Non .tex files in doc
+doc/**
+!doc/*.tex
+!doc/Makefile
