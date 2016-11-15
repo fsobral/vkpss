@@ -60,27 +60,27 @@ contains
 
     status = 0
 
-    if ( allocated(QQ_) .and. size(QQ_) .ne. (2 * n) * (2 * n) ) then
+    if ( allocated(QQ_) .and. size(QQ_) .ne. (2 * npt) * (2 * npt) ) then
 
        deallocate(QQ_)
 
     end if
 
     if ( .not. allocated(QQ_)  ) &
-         allocate(QQ_(2 * n, 2 * n), STAT = status)
+         allocate(QQ_(2 * npt, 2 * npt), STAT = status)
 
     if ( status .ne. 0 ) return
 
     ! Allocate v_
        
-    if ( allocated(v_) .and. size(v_) .ne. (2 * n) ) then
+    if ( allocated(v_) .and. size(v_) .ne. (2 * npt) ) then
 
        deallocate(v_)
 
     end if
 
     if ( .not. allocated(v_)  ) &
-         allocate(v_(2 * n), STAT = status)
+         allocate(v_(2 * npt), STAT = status)
 
   end subroutine initialize
 
