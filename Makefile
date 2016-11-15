@@ -22,7 +22,7 @@ FCC = "-xf77-cpp-input"
 
 SOLVERLIB = /opt/tango/algencan-3.0.0/lib
 SOLVER_INTERFACE = algencan_solver
-SLOPTS = -lalgencan -ltrdf
+SLOPTS = -lalgencan -lsvr
 
 # Linking options
 
