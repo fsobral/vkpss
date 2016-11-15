@@ -15,7 +15,7 @@ module svrmod
 
   ! Public variables and subroutines
 
-  public :: qsvm, finalize, svrToTRDF
+  public :: qsvm, finalize, svrToTRDF, fromScratch
 
 contains
 
@@ -58,6 +58,8 @@ contains
 
     ! Allocate QQ_
 
+    status = 0
+
     if ( allocated(QQ_) .and. size(QQ_) .ne. (2 * n) * (2 * n) ) then
 
        deallocate(QQ_)
@@ -89,22 +91,23 @@ contains
   !                                                          !
   !----------------------------------------------------------!
 
-  SUBROUTINE fromscratch(N,X,H,NPT,DELTA,Y,FF,FLAG)
+  SUBROUTINE fromscratch(N, X, NPT, DELTA, OBJF, H, Y, FF, FLAG)
 
     implicit none
 
     ! SCALAR ARGUMENTS
-
     integer :: n, npt, flag
     real(8) :: delta
 
     ! ARRAY ARGUMENTS
-    
     real(8) :: FF(npt), H(npt + n + 1, npt + n + 1), x(n), &
-         Y(npt, n)
+               Y(npt, n)
 
     intent(in ) :: delta, n, npt, x
     intent(out) :: ff, flag, h, y
+
+    ! EXTERNAL SUBROUTINES
+    external :: OBJF
 
     ! LOCAL ARRAYS
 
@@ -138,7 +141,7 @@ contains
        DO J = 1, N
           YY(J) = Y(I,J) 
        END DO
-       CALL CALFUN(N, YY, FF(I), FLAG)
+       CALL OBJF(N, YY, FF(I), FLAG)
        !     PRINT*, FLAG
        IF ( FLAG .NE. 0 ) RETURN
     END DO
@@ -174,7 +177,7 @@ contains
           DO J = 1, N
              YY(J) = Y(I,J) 
           END DO
-          CALL CALFUN(N, YY, FF(I), FLAG)   
+          CALL OBJF(N, YY, FF(I), FLAG)   
           IF ( FLAG .NE. 0 ) RETURN
        END DO
     END IF
@@ -335,8 +338,8 @@ contains
 
     ! EXTERNAL SUBROUTINES
 
-    external :: svrevalf,svrevalg,svrevalh,svrevalc,svrevaljac,svrevalhc, &
-         svrevalfc,svrevalgjac,svrevalgjacp,svrevalhl,svrevalhlp
+!    external :: svrevalf,svrevalg,svrevalh,svrevalc,svrevaljac,svrevalhc, &
+!         svrevalfc,svrevalgjac,svrevalgjacp,svrevalhl,svrevalhlp
 
     !     1 - PROBLEM BUILDING      
 

@@ -228,7 +228,7 @@ contains
 
 5   continue
 
-    call fromScratch(n, x, H, npt, rho, Y, FF, flag)
+    call fromScratch(n, x, npt, rho, calfun, H, Y, FF, flag)
 
     ! Build SVR Model
 
@@ -236,7 +236,7 @@ contains
 
     ! Initialize TRDF's structure
 
-    call svmToTRDF(n, HQ, g, b, XBASE_A, HQ_A, GOPT_A, MOD_A, Q)
+    call svrToTRDF(n, HQ, g, b, XBASE_A, HQ_A, GOPT_A, MOD_A, Q)
 
     IF ( OUTPUT ) WRITE(*,1002) RHO,DELTA,FF(1),IC,MIN(N,MAXXEL), &
                   (X(I), I=1,MIN(N,MAXXEL))
@@ -310,7 +310,7 @@ contains
 
     ! Update TRDF's data
 
-    call svmToTRDF(n, HQ, g, b, XBASE_A, HQ_A, GOPT_A, MOD_A, Q)
+    call svrToTRDF(n, HQ, g, b, XBASE_A, HQ_A, GOPT_A, MOD_A, Q)
 
 23  IF ( F .LE. FOPT + 0.1D0 * VQUAD ) THEN                 
        FOPT = F
