@@ -3,7 +3,7 @@ module svrmod
   implicit none
 
   ! SVR Penalization Parameter
-  real(8), parameter :: C_SVR = 1.0D-08
+  real(8), parameter :: C_SVR = 1.0D+08
   ! SVR Tolerance
   real(8), parameter :: EPS_SVR = 1.25D-08
 
@@ -91,7 +91,7 @@ contains
   !                                                          !
   !----------------------------------------------------------!
 
-  SUBROUTINE fromscratch(N, X, NPT, DELTA, OBJF, H, Y, FF, FLAG)
+  SUBROUTINE fromScratch(N, X, NPT, DELTA, OBJF, H, Y, FF, FLAG)
 
     implicit none
 
@@ -269,7 +269,7 @@ contains
     !  PRINT*, "Y(1,1) = ", Y(1,1)
     !  PRINT*, "Y(1,2) = ", Y(1,2)
 
-  END SUBROUTINE fromscratch
+  END SUBROUTINE fromScratch
 
   !----------------------------------------------------------!
   ! SUBROUTINE QSVM                                          !
@@ -313,7 +313,7 @@ contains
 
     ! ARRAY ARGUMENTS
 
-    real(8) :: Y(NPT,N), FF(NPT), HQ(N,N)
+    real(8) :: g(N), Y(NPT,N), FF(NPT), HQ(N,N)
 
     ! ALGENCAN VARIABLES
 
@@ -330,7 +330,7 @@ contains
 
     ! LOCAL ARRAYS
 
-    real(8) :: RES(2 * NPT), g(N), M_VALUES(NPT), ALFA(NPT), &
+    real(8) :: RES(2 * NPT), M_VALUES(NPT), ALFA(NPT), &
          GAMA(NPT), XIS(N), HXIS(N), BAUX1(NPT), BAUX2(NPT),          &
          AUXO(NPT), l(2 * NPT), lambda(1), u(2 * NPT)
     character(80) :: specfnm, outputfnm, vparam(10)
@@ -476,6 +476,7 @@ contains
     specfnm   = ''
 
     nvparam = 0
+    vparam(1) = 'ITERATIONS-OUTPUT-DETAIL 56'
 
     DO I = 1, ENE
        RES(I) = 0.0D0
@@ -685,9 +686,11 @@ contains
 
     end do
 
-    TRDF_MOD = dot_product(TRDF_GOPT(1:n), TRDF_XBASE(1:n))
+    TRDF_MOD = dot_product(TRDF_GOPT, TRDF_XBASE)
 
-    TRDF_MOD = TRDF_MOD / 2.0D0 + b
+    TRDF_MOD = TRDF_MOD / 2.0D0
+
+    TRDF_MOD = TRDF_MOD + dot_product(g, TRDF_XBASE) + b
 
     do i = 1, n
 
@@ -713,7 +716,7 @@ contains
     DO I = 1, N
        DO J = 1, I
           Q(K + N + 1)       = HQ(I,J)
-          TRDF_HQ(k + n + 1) = HQ(i,j)
+          TRDF_HQ(k)         = HQ(i,j)
           K                  = K + 1
        END DO
     END DO

@@ -226,6 +226,8 @@ contains
        XBASE_A(I) =  XNOVO(I)
     END DO
 
+    IT = 1
+
 5   continue
 
     call fromScratch(n, x, npt, rho, calfun, H, Y, FF, flag)
@@ -290,6 +292,7 @@ contains
     CALL SIGMA(H,N,NPT,Y,X,VETOR1,SIGM,ALFA,BETA,TAU,IT,DELTA)         
 
     ! IF ANY REDUCTION IN F, PUT X IN INTERPOLATION SET.
+
     IF (F .LE. FOPT) THEN  
        IF ( OUTPUT ) WRITE(*,1005) IT
        DO I = 1, N            
@@ -525,8 +528,9 @@ contains
   ! ******************************************************************
 
   ! **************** UPDAT THE INVERSE H ******************************
-  SUBROUTINE INVERSAH(H, N, NPT,VETOR1,SIGM,IT,ALFA,BETA,TAU)
-!!$    IMPLICIT REAL*8 (A-H,O-Z)
+  SUBROUTINE INVERSAH(H, N, NPT, VETOR1, SIGM, IT, ALFA, BETA, TAU)
+
+    implicit none
 
     ! SCALAR ARGUMENTS
     integer :: IT,N,NPT
@@ -534,8 +538,6 @@ contains
 
     ! ARRAY ARGUMENTS
     real(8) :: VETOR1(*),H(NPT+N+1,NPT+N+1)
-
-!#include "tr_params.par"
 
     ! ALFA*(E-MM) * (E-MM)'- BETA* H * E * E'*H+TAU*H*E*(E-MM)'+ (E-MM)* E'* H
     ! MM = H*WW THAT IS STORED IN VETOR1 
@@ -545,6 +547,8 @@ contains
 
     ! LOCAL ARRAYS
     real(8) :: P1(NPT+N+1,NPT+N+1),P2(NPT+N+1,NPT+N+1),P3(NPT+N+1,NPT+N+1)
+
+    write(*,*) '------>', IT
 
     VETOR1(IT) = VETOR1(IT)-1.0D0              
     DO I=1, N+NPT+1
