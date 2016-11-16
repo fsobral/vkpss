@@ -231,7 +231,16 @@ contains
 
 5   continue
 
+    ! Building initial sampling set
+
     call fromScratch(n, x, npt, rho, calfun, H, Y, FF, flag)
+
+    IF ( OUTPUT ) WRITE(*,1002) RHO,DELTA,FF(1),IC,MIN(N,MAXXEL), &
+                  (X(I), I=1,MIN(N,MAXXEL))
+
+    IF ( FLAG .NE. 0 ) GOTO 31
+
+    FOPT = FF(1)
 
     ! Build SVR Model
 
@@ -240,12 +249,6 @@ contains
     ! Initialize TRDF's structure
 
     call svrToTRDF(n, HQ, g, b, XBASE_A, HQ_A, GOPT_A, MOD_A, Q)
-
-    IF ( OUTPUT ) WRITE(*,1002) RHO,DELTA,FF(1),IC,MIN(N,MAXXEL), &
-                  (X(I), I=1,MIN(N,MAXXEL))
-    IF ( FLAG .NE. 0 ) GOTO 31
-
-    FOPT = FF(1)
 
 11  CALL SUBPROBLEMA(N, NPT, Q, DELTA, D, X, XL, XU, DSQ, &
          M, EQUATN, LINEAR, CCODED, XEPS, FLAG) 
@@ -277,6 +280,8 @@ contains
     CALL CALFUN(N,X,F,FLAG)
 
     IF ( FLAG .NE. 0 ) GOTO 31
+
+    IF ( OUTPUT ) WRITE(*,1006) F
 
     IF ( (F - FOPT) .GT. (0.1D0 * VQUAD) ) THEN
        DELTA = 0.5D0 * DELTA                 
@@ -385,7 +390,7 @@ contains
 
 1000 FORMAT(/,'PHASE 0',/,7('-'),/,/,'FEASIBILITY =',36X,D23.8,/, &
               'NEW POINT',/,3(1X,D23.8))
-1001 FORMAT(/,'PHASE 1',/,7('-'),/)
+1001 FORMAT(/,'PHASE 1',/,7('-'))
 1002 FORMAT(/,'(RE)BUILDING MODEL from scratch.',/, &
             5X,'RHO =',50X,D12.5,/,                 &
             5X,'Delta =',48X,D12.5,/,               &
@@ -401,6 +406,8 @@ contains
             5X,'Function evaluations =',35X,I10)
 1004 FORMAT(5X,'Objective function =',24X,D23.8)
 1005 FORMAT(/,'REMOVING sampling point',1X,I4,'.')
+1006 FORMAT(5X,'Objective function (at trial point) =',&
+         7X,D23.8)
 
 1020 FORMAT(/,'Solution was found!',/)
 1021 FORMAT(/,'Flag -1: Error while evaluating functions.',/)

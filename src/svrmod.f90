@@ -11,6 +11,10 @@ module svrmod
 
   real(8), allocatable :: QQ_(:, :), v_(:)
 
+  ! COMMON SCALARS
+
+  logical :: VERBOSE = .true.
+
   private
 
   ! Public variables and subroutines
@@ -364,6 +368,8 @@ contains
     !         PRINT*, "FF(",I,") = ", FF(I)
     !      END DO   
 
+    if ( VERBOSE ) write(*,FMT=1000)
+
     call initialize(n, npt, status)
 
     if ( status .ne. 0 ) then
@@ -505,9 +511,10 @@ contains
     hnnzmax,epsfeas,epsopt,efstain,eostain,efacc,eoacc,outputfnm,     &
     specfnm,nvparam,vparam,ENE,RES,l,u,m,lambda,equatn,linear,coded,  &
     checkder,f,cnorm,snorm,nlpsupn,inform)
+
+    if ( VERBOSE ) write(*, FMT=1001) f, cnorm, nlpsupn
     
     !      PRINT*, "ALGENCAN = ", f, cnorm, snorm, nlpsupn, inform
-    PRINT*, "ALGENCAN = ", inform      
     !      pause
 
     ! 3 - MODEL BUILDING 
@@ -642,6 +649,8 @@ contains
        END IF
     END DO
 
+    if ( VERBOSE ) write(*, FMT=1002) pen, CONT1, CONT2
+
     !      DO I = 1, CONT2
     !         PRINT*, "BAUX2", BAUX2(I)
     !      END DO
@@ -675,6 +684,20 @@ contains
     ELSE
        b = SOMAB / (CONT1 + CONT2)
     END IF
+
+    ! NON-EXECUTABLE STATEMENTS
+
+1000 FORMAT(/,5X,'BUILDING MODEL by SVR')
+1001 FORMAT(5X,3X,'Solved optimization problem (ALGENCAN)',/, &
+          5X,3X,3X,'Objective value:',33X,1PD12.5,/, &
+          5X,3X,3X,'Feasibility:',37X,1PD12.5,/,&
+          5X,3X,3X,'Gradient norm:',35X,1PD12.5)
+1002 FORMAT(5X,3X,'Penalization:',39X,D12.5,/, &
+          5X,3X,"Number of non-binding alpha's:",24X,I10,/, &
+          5X,3X,"Number of non-binding alpha''s:",23X,I10)
+          
+
+    
 
   END SUBROUTINE qsvm
 
