@@ -245,6 +245,17 @@ contains
     END DO
 
     ! THE MATRIX INVERSE H     
+
+    do i = 1, NPT + N + 1
+
+       do j = 1, NPT + N + 1
+
+          H(I,J) = 0.0D0
+
+       end do
+
+    end do
+    
     DO I=1, NPT
        DO J=1, NPT
           H(I,J)=OMEGA(I,J)         
@@ -262,7 +273,7 @@ contains
 
     DO I=1, NPT
        DO J= NPT+1, NPT+N+1
-          H(I,J) = H(J,I)        
+          H(I,J) = H(J,I)
        END DO
     END DO
 
@@ -326,7 +337,7 @@ contains
     ! LOCAL SCALARS
 
     integer :: I, J, K, CONT1, CONT2, flag, status
-    real(8) :: AUX, XHX, gX, TOL, SOMAB
+    real(8) :: AUX, XHX, gX, TOL, SOMAB, pen, absalpha, absgamma
 
     ! LOCAL ARRAYS
 
@@ -401,11 +412,11 @@ contains
 
     END DO
 
-    !      DO I = 1, 2*NPT
-    !         DO J = 1, 2*NPT
-    !            PRINT*, "Q(",I,J,")=", Q(I,J)
-    !         END DO
-    !      END DO
+         ! DO I = 1, 2*NPT
+         !    DO J = 1, 2*NPT
+         !       PRINT*, "Q(",I,J,")=", QQ_(I,J)
+         !    END DO
+         ! END DO
 
     ! VECTOR v       
 
@@ -414,18 +425,17 @@ contains
        v_(I + NPT) = - v_(I)
     END DO
 
+    ! do i = 1, 2 * NPT
+    !    write(*,*) 'v(',I,')=', v_(I)
+    ! end do
+
     ! 2 - SOLVING THE QUADRATIC PROBLEM (USING ALGENCAN)
 
     ! Set lower bounds, upper bounds, and initial guess
 
     ENE = 2 * NPT
 
-    DO I = 1, ENE
-       l(I)   = 0.0D0
-       u(I)   = C_SVR
-       ! TODO: Test if the previous solution can be used
-       RES(I) = 0.0D0
-    END DO
+    pen = C_SVR
 
     ! Constraints
 
@@ -433,7 +443,7 @@ contains
 
     equatn(1) = .true.
 
-    lambda(1) = 0.0d0
+    lambda(1) = 1.0d0
 
     linear(1) = .true.
 
@@ -444,7 +454,7 @@ contains
     coded( 3) = .true.  ! hsub
     coded( 4) = .true.  ! csub
     coded( 5) = .true.  ! jacsub
-    coded( 6) = .false. ! hcsub
+    coded( 6) = .true.  ! hcsub
     coded( 7) = .false. ! fcsub
     coded( 8) = .false. ! gjacsub
     coded( 9) = .false. ! gjacpsub
@@ -467,7 +477,8 @@ contains
     epsopt    = 1.0d-08
 
     efstain   = sqrt( epsfeas )
-    eostain   = epsopt ** 1.5d0
+    ! Disable early stopping criterium
+    eostain   = - 1.0D0
 
     efacc     = sqrt( epsfeas )
     eoacc     = sqrt( epsopt )
@@ -479,8 +490,15 @@ contains
     vparam(1) = 'ITERATIONS-OUTPUT-DETAIL 56'
 
     DO I = 1, ENE
-       RES(I) = 0.0D0
+       l(I)   = 0.0D0
+       u(I)   = pen
     END DO
+
+    do i = 1, NPT
+       ! TODO: Test if the previous solution can be used
+       RES(I) = 1.0D0
+       RES(NPT + i) = -1.0D0
+    end do
 
     call algencan(svrevalf,svrevalg,svrevalh,svrevalc,svrevaljac,svrevalhc, &
     svrevalfc,svrevalgjac,svrevalgjacp,svrevalhl,svrevalhlp,jcnnzmax,      &
@@ -589,7 +607,12 @@ contains
     TOL = 1.0D-3
 
     CONT1 = 0
+
+    absalpha = 0.0
+
     DO I = 1, NPT
+       absalpha = max(absalpha, abs(alfa(i)))
+
        IF (ALFA(I) .GT. TOL) THEN
           IF (ALFA(I) .LT. (C_SVR - TOL)) THEN
              CONT1 = CONT1 + 1
@@ -605,7 +628,12 @@ contains
     !      END DO
 
     CONT2 = 0
+
+    absgamma = 0.0D0
+
     DO I = 1, NPT
+       absgamma = max(absgamma, abs(gama(i)))
+
        IF (GAMA(I) .GT. TOL) THEN
           IF (GAMA(I) .LT. (C_SVR - TOL)) THEN
              CONT2 = CONT2 + 1            
@@ -630,8 +658,20 @@ contains
        SOMAB = SOMAB + BAUX2(I)
     END DO
 
-    IF ((CONT1 + CONT2) .EQ. 0) THEN
-       b = FF(1)
+    IF ((CONT1 + CONT2) .EQ. 0 ) THEN
+
+!!$       if ( absalpha .gt. TOL .or. absgamma .gt. TOL ) then
+!!$          
+!!$          pen = pen * 10.0D0
+!!$
+!!$          goto 010
+!!$
+!!$       else
+
+          b = FF(1)
+
+!!$       end if
+
     ELSE
        b = SOMAB / (CONT1 + CONT2)
     END IF
@@ -709,7 +749,7 @@ contains
     end do
 
     ! It is important to follow the correct structure and
-    ! insert the upper triangular part of HQ
+    ! insert the lower triangular part of HQ
 
     K = 1
 
@@ -720,6 +760,10 @@ contains
           K                  = K + 1
        END DO
     END DO
+
+    ! do i = 1, 1 + N + N * (N + 1) / 2
+    !    write(*,*) 'Qc(',i,')=',Q(i)
+    ! end do
 
   end subroutine svrToTRDF
 
@@ -753,20 +797,16 @@ contains
        DO K = 1, n
           Qx(I) = Qx(I) + QQ_(I,K) * x(K)
        END DO
+!       write(*,*) 'Q(',i,')=',Qx(i)
     END DO
 
     xQx = dot_product(x, Qx)
 
     vx  = dot_product(x, v_)
 
-!!$    CALL mvv(x,Qx,n,xQx)
-!!$    CALL mvv(v,x,n,vx)
-
-    !  PRINT*, "xQx = ", xQx
-
-    !  PRINT*, "x6 = ", x(6), "Qx6 =", Qx(6), "Q65 = ", Q(6,5)
-
     f = xQx / 2.0D0 + vx
+
+!    write(*,*) '---->',f, xQx, vx
 
   END SUBROUTINE svrevalf
 
@@ -820,14 +860,14 @@ contains
 
     lmem = .false.
 
-    hnnz = 1
+    hnnz = 0
 
     DO J = 1, n
-       DO I = 1, n
+       DO I = J, n
+          hnnz       = hnnz + 1
           hrow(hnnz) = I
           hcol(hnnz) = J
           hval(hnnz) = QQ_(I,J)
-          hnnz       = hnnz + 1
        END DO
     END DO
 
@@ -939,7 +979,11 @@ contains
     real(kind=8), intent(in) :: x(n)
     real(kind=8), intent(out) :: hcval(lim)
 
-    flag = -1
+    flag = 0
+
+    lmem = .false.
+
+    hcnnz = 0
 
   end subroutine svrevalhc
 

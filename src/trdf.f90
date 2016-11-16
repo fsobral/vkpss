@@ -196,6 +196,7 @@ contains
     DELTA  = RHO
     RHOEND = REND
     GAMA   = 0.1D0
+    IT     = 1
 
     !     ---------------------------
     !     Feasibility phase - Phase 0
@@ -454,6 +455,9 @@ contains
     ITT=IT    ! STORAGE THE POSITION OF BEST ITERATING YET.          
     IT =1
     SIGMI = -1.0D100
+
+    ! Creating vector 'w'
+
     WW(NPT+1,1) = 1.0D0
     DO I=1, N
        WW(I+NPT+1, 1) =  X(I)- XBASE_A(I)
@@ -466,8 +470,12 @@ contains
        WW(I, 1) = 0.5D0*CONT**2
     END DO
 
-    ! CALCULATING ALL SIGMA AND CHOOSE IT FOR THE GREATER SIGMA. MULTIPLY T-th LINE OF H FOR W FOR OBTAIN TAU. 
-    DO KKK = 1, NPT-1            
+    ! CALCULATING ALL SIGMA AND CHOOSE IT FOR THE GREATER
+    ! SIGMA. MULTIPLY T-th LINE OF H FOR W FOR OBTAIN TAU.
+
+    ! Calculating w^T * H * w
+
+    DO KKK = 1, NPT ! Changed from NPT - 1 to NPT
        CONT=0.0D0
        DO I=1, NPT+ N +1
           CONT = CONT +  H(IT, I) * WW(I,1)
@@ -493,10 +501,12 @@ contains
        DO I=1, N
           CONT = CONT + (X(I)-XBASE_A(I))**2
        END DO
+
        BETA =   0.5D0 * CONT**2 - AGUARD
        ALFA = H(IT,IT) 
        SIGM = ALFA * BETA + TAU**2  
-       IF (SIGM .GE. SIGMI .AND. IT .NE. ITT) THEN                      
+
+       IF (SIGM .GE. SIGMI .AND. IT .NE. ITT) THEN
           SIGMI = SIGM
           IAUXILIAR  =  IT                
           AUXILIAR(1) = ALFA
@@ -548,8 +558,6 @@ contains
     ! LOCAL ARRAYS
     real(8) :: P1(NPT+N+1,NPT+N+1),P2(NPT+N+1,NPT+N+1),P3(NPT+N+1,NPT+N+1)
 
-    write(*,*) '------>', IT
-
     VETOR1(IT) = VETOR1(IT)-1.0D0              
     DO I=1, N+NPT+1
        DO J=1, N+NPT+1
@@ -593,7 +601,7 @@ contains
     DO I = 1,N
        L(I)=  DMAX1(XL(I) - XBASE_A(I),X(I) - XBASE_A(I)-DELTA) 
        U(I)=  DMIN1(XU(I) - XBASE_A(I),X(I) - XBASE_A(I)+DELTA)           
-       XANTIGO(I) = X(I)       
+       XANTIGO(I) = X(I)
     END DO
 
     DO I = 1, N        
