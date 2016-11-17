@@ -198,6 +198,8 @@ contains
     GAMA   = 0.1D0
     IT     = 1
 
+    call svr_set_output(OUTPUT)
+
     !     ---------------------------
     !     Feasibility phase - Phase 0
     !     ---------------------------

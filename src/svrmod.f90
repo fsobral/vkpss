@@ -13,15 +13,30 @@ module svrmod
 
   ! COMMON SCALARS
 
-  logical :: VERBOSE = .true.
+  logical :: OUTPUT = .true.
 
   private
 
   ! Public variables and subroutines
 
-  public :: qsvm, finalize, svrToTRDF, fromScratch
+  public :: qsvm, finalize, svrToTRDF, fromScratch, svr_set_output
 
 contains
+
+  !----------------------------------------------------------!
+  ! SUBROUTINE SVR_SET_OUTPUT                                !
+  !                                                          !
+  ! Sets the output ON or OFF.                               !
+  !----------------------------------------------------------!
+
+  subroutine svr_set_output(o)
+
+    ! SCALAR ARGUMENTS
+    logical, intent(in) :: o
+
+    OUTPUT = o
+
+  end subroutine svr_set_output
 
   !----------------------------------------------------------!
   ! SUBROUTINE FINALIZE                                      !
@@ -368,7 +383,7 @@ contains
     !         PRINT*, "FF(",I,") = ", FF(I)
     !      END DO   
 
-    if ( VERBOSE ) write(*,FMT=1000)
+    if ( OUTPUT ) write(*,FMT=1000)
 
     call initialize(n, npt, status)
 
@@ -519,7 +534,7 @@ contains
     specfnm,nvparam,vparam,ENE,RES,l,u,m,lambda,equatn,linear,coded,  &
     checkder,f,cnorm,snorm,nlpsupn,inform)
 
-    if ( VERBOSE ) write(*, FMT=1001) f, cnorm, nlpsupn
+    if ( OUTPUT ) write(*, FMT=1001) f, cnorm, nlpsupn
     
     !      PRINT*, "ALGENCAN = ", f, cnorm, snorm, nlpsupn, inform
     !      pause
@@ -587,7 +602,7 @@ contains
 
     ! Just for debugging purposes, evaluates w^T * w
 
-    if ( VERBOSE ) then
+    if ( OUTPUT ) then
 
        wTw = 0.0D0
 
@@ -672,7 +687,7 @@ contains
        END IF
     END DO
 
-    if ( VERBOSE ) write(*, FMT=1002) pen, CONT1, CONT2
+    if ( OUTPUT ) write(*, FMT=1002) pen, CONT1, CONT2
 
     !      DO I = 1, CONT2
     !         PRINT*, "BAUX2", BAUX2(I)
