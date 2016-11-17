@@ -68,6 +68,8 @@ C     NUMBER OF INTERPOLATION POITNS.
          NPT = 2 * nn + 3
       end if
 
+      NPT = (nn + 1) * (nn + 2) / 2
+
 C     INITIAL POINT AND BOX CONSTRAINTS.
 
       do i = 1,nn

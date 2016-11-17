@@ -3,9 +3,9 @@ module svrmod
   implicit none
 
   ! SVR Penalization Parameter
-  real(8), parameter :: C_SVR = 1.0D+08
+  real(8), parameter :: C_SVR = 1.0D+10
   ! SVR Tolerance
-  real(8), parameter :: EPS_SVR = 1.25D-08
+  real(8), parameter :: EPS_SVR = 1.25D-15
 
   ! COMMON ARRAYS
 
@@ -341,7 +341,7 @@ contains
     ! LOCAL SCALARS
 
     integer :: I, J, K, CONT1, CONT2, flag, status
-    real(8) :: AUX, XHX, gX, TOL, SOMAB, pen, absalpha, absgamma
+    real(8) :: AUX, XHX, gX, TOL, SOMAB, pen, absalpha, absgamma, wTw
 
     ! LOCAL ARRAYS
 
@@ -381,6 +381,10 @@ contains
        return
 
     end if
+
+    do i = 1, NPT
+       write(*,*) (Y(i,j), j = 1,n), FF(i)
+    end do
 
     ! MATRIX Q
 
@@ -428,7 +432,7 @@ contains
 
     DO I = 1, NPT
        v_(I)       = - FF(I) + EPS_SVR
-       v_(I + NPT) = - v_(I)
+       v_(I + NPT) =   FF(I) + EPS_SVR !- v_(I)
     END DO
 
     ! do i = 1, 2 * NPT
@@ -479,8 +483,8 @@ contains
 
     ! Parameters setting
 
-    epsfeas   = 1.0d-08
-    epsopt    = 1.0d-08
+    epsfeas   = 1.0d-05
+    epsopt    = 1.0d-05
 
     efstain   = sqrt( epsfeas )
     ! Disable early stopping criterium
@@ -492,8 +496,11 @@ contains
     outputfnm = ''
     specfnm   = ''
 
-    nvparam = 0
-    vparam(1) = 'ITERATIONS-OUTPUT-DETAIL 56'
+    nvparam = 1
+    vparam(1) = 'SAFEMODE'
+!    vparam(1) = 'OBJECTIVE-AND-CONSTRAINTS-SCALING-AVOIDED'
+!    vparam(1) = 'OUTER-ITERATIONS-LIMIT 500'
+!    vparam(2) = 'ITERATIONS-OUTPUT-DETAIL 56'
 
     DO I = 1, ENE
        l(I)   = 0.0D0
@@ -542,9 +549,9 @@ contains
        AUXO(I) = ALFA(I) - GAMA(I)
     END DO
 
-    !      DO I = 1, NPT
-    !         PRINT*, "AUXO(", I, ")", AUXO(I)
-    !      END DO  
+         DO I = 1, NPT
+            PRINT*, AUXO(I)
+         END DO  
 
     DO I = 1, N
        g(I) = 0.0D0
@@ -577,6 +584,22 @@ contains
           HQ(I, J) = 2.0D0 * HQ(I, J)
        END DO
     END DO
+
+    ! Just for debugging purposes, evaluates w^T * w
+
+    if ( VERBOSE ) then
+
+       wTw = 0.0D0
+
+       do j = 1, NPT
+
+          wTw = wTw + auxo(j) * dot_product(auxo, QQ_(1:NPT,j))
+          
+       end do
+
+       write(*, FMT = 9000) wTw
+
+    end if
 
     ! Calculates 'b'
 
@@ -685,6 +708,8 @@ contains
        b = SOMAB / (CONT1 + CONT2)
     END IF
 
+    write(*,*) b
+
     ! NON-EXECUTABLE STATEMENTS
 
 1000 FORMAT(/,5X,'BUILDING MODEL by SVR')
@@ -695,6 +720,7 @@ contains
 1002 FORMAT(5X,3X,'Penalization:',39X,D12.5,/, &
           5X,3X,"Number of non-binding alpha's:",24X,I10,/, &
           5X,3X,"Number of non-binding alpha''s:",23X,I10)
+9000 FORMAT(5X,3X,'w^Tw:',47X,1PD12.5)
           
 
     

@@ -179,7 +179,7 @@ contains
     integer :: i,it,j,k,kn,flag
     real(8) :: alfa,beta,c,cnorm,delta,distsq,dsq,fopt,gama, &
          mindelta,rho,rhobeg,rhoend,sigm,sum,tau,tempofinal, &
-         tempoinicial, b, MOD_A
+         tempoinicial, b, MOD_A, mf
 
     IF ( OUTPUT ) WRITE(*,3000)
 
@@ -244,16 +244,16 @@ contains
 
     ! Build SVR Model
 
-    call qsvm(Y, FF, n, npt, HQ, g, b)
+11  call qsvm(Y, FF, n, npt, HQ, g, b)
 
     ! Initialize TRDF's structure
 
     call svrToTRDF(n, HQ, g, b, XBASE_A, HQ_A, GOPT_A, MOD_A, Q)
 
-11  CALL SUBPROBLEMA(N, NPT, Q, DELTA, D, X, XL, XU, DSQ, &
+    CALL SUBPROBLEMA(N, NPT, Q, DELTA, D, X, XL, XU, DSQ, &
          M, EQUATN, LINEAR, CCODED, XEPS, FLAG) 
 
-    IF ( OUTPUT ) WRITE(*,1003) RHO, DELTA, Q(1), FOPT, IC
+    IF ( OUTPUT ) WRITE(*,1003) RHO, DELTA, VQUAD_A, FOPT, IC
     IF ( FLAG .NE. 0 ) GOTO 31
 
     DISTSQ = (10.D0 * RHO)**2                 
@@ -313,13 +313,13 @@ contains
 
     CALL INVERSAH(H, N, NPT, VETOR1, SIGM, IT, ALFA, BETA,TAU)
 
-    ! Update SVR Model
+    ! ! Update SVR Model
 
-    call qsvm(Y, FF, n, npt, HQ, g, b)
+    ! call qsvm(Y, FF, n, npt, HQ, g, b)
 
-    ! Update TRDF's data
+    ! ! Update TRDF's data
 
-    call svrToTRDF(n, HQ, g, b, XBASE_A, HQ_A, GOPT_A, MOD_A, Q)
+    ! call svrToTRDF(n, HQ, g, b, XBASE_A, HQ_A, GOPT_A, MOD_A, Q)
 
 23  IF ( F .LE. FOPT + 0.1D0 * VQUAD ) THEN                 
        FOPT = F
