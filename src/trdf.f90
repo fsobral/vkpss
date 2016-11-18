@@ -252,7 +252,10 @@ contains
 
     c_svr   = max(c_svr, 1.0D0 / (eps_svr * eps_svr))
 
-11  call qsvm(Y, FF, n, npt, c_svr, eps_svr, HQ, g, b)
+11  call qsvm(Y, FF, n, npt, c_svr, eps_svr, HQ, g, b, flag)
+
+    ! TODO: Use the correct flag according the output
+    if ( flag .ne. 0 ) GOTO 31
 
     ! Initialize TRDF's structure
 

@@ -306,7 +306,7 @@ contains
   !                                                          !
   !----------------------------------------------------------!
 
-  subroutine qsvm(Y, FF, N, NPT, c, eps, HQ, g, b)
+  subroutine qsvm(Y, FF, N, NPT, c, eps, HQ, g, b, flag)
 
     implicit none
 
@@ -338,7 +338,7 @@ contains
 
     ! SCALAR ARGUMENTS
 
-    integer :: N, NPT
+    integer :: N, NPT, flag
     real(8) :: b, c, eps
 
     ! ARRAY ARGUMENTS
@@ -346,6 +346,7 @@ contains
     real(8) :: g(N), Y(NPT,N), FF(NPT), HQ(N,N)
 
     intent(in   ) :: eps
+    intent(out  ) :: flag
     intent(inout) :: c
 
     ! ALGENCAN VARIABLES
@@ -358,7 +359,7 @@ contains
 
     ! LOCAL SCALARS
 
-    integer :: I, J, K, CONT1, CONT2, flag, status
+    integer :: I, J, K, CONT1, CONT2, status
     real(8) :: AUX, XHX, gX, TOL, SOMAB, absalpha, absgamma, wTw
 
     ! LOCAL ARRAYS
@@ -386,6 +387,8 @@ contains
     !         PRINT*, "FF(",I,") = ", FF(I)
     !      END DO   
 
+    flag = 0
+
     if ( OUTPUT ) write(*,FMT=1000)
 
     call initialize(n, npt, status)
@@ -394,7 +397,7 @@ contains
 
        write(*,*) 'Memory problems when initializing SVR structure.'
 
-       flag = 99
+       flag = 3
 
        return
 
@@ -499,8 +502,8 @@ contains
 
     ! Parameters setting
 
-    epsfeas   = 1.0d-05
-    epsopt    = 1.0d-05
+    epsfeas   = 1.0d-08
+    epsopt    = 1.0d-08
 
     efstain   = sqrt( epsfeas )
     ! Disable early stopping criterium
@@ -512,8 +515,9 @@ contains
     outputfnm = ''
     specfnm   = ''
 
-    nvparam = 1
+    nvparam = 2
     vparam(1) = 'SAFEMODE'
+    vparam(2) = 'LINEAR-SYSTEMS-SOLVER-IN-ACCELERATION-PROCESS MA57'
 !    vparam(1) = 'OBJECTIVE-AND-CONSTRAINTS-SCALING-AVOIDED'
 !    vparam(1) = 'OUTER-ITERATIONS-LIMIT 500'
 !    vparam(2) = 'ITERATIONS-OUTPUT-DETAIL 56'
@@ -536,6 +540,16 @@ contains
     checkder,f,cnorm,snorm,nlpsupn,inform)
 
     if ( OUTPUT ) write(*, FMT=1001) f, cnorm, nlpsupn
+
+    if ( inform .ne. 0 ) then
+
+       flag = 1
+
+       write(*,*) 'Error in the solver'
+
+       return
+
+    end if
     
     !      PRINT*, "ALGENCAN = ", f, cnorm, snorm, nlpsupn, inform
     !      pause
