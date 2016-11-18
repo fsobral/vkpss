@@ -397,9 +397,9 @@ contains
 
     end if
 
-    do i = 1, NPT
-       write(*,*) (Y(i,j), j = 1,n), FF(i)
-    end do
+    ! do i = 1, NPT
+    !    write(*,*) (Y(i,j), j = 1,n), FF(i)
+    ! end do
 
     ! MATRIX Q
 
@@ -564,9 +564,9 @@ contains
        AUXO(I) = ALFA(I) - GAMA(I)
     END DO
 
-         DO I = 1, NPT
-            PRINT*, AUXO(I)
-         END DO  
+         ! DO I = 1, NPT
+         !    PRINT*, AUXO(I)
+         ! END DO  
 
     DO I = 1, N
        g(I) = 0.0D0
@@ -687,7 +687,8 @@ contains
        END IF
     END DO
 
-    if ( OUTPUT ) write(*, FMT=1002) pen, CONT1, CONT2
+    if ( OUTPUT ) write(*, FMT=1002) pen, CONT1, CONT2, absalpha, &
+                                     absgamma
 
     !      DO I = 1, CONT2
     !         PRINT*, "BAUX2", BAUX2(I)
@@ -723,7 +724,7 @@ contains
        b = SOMAB / (CONT1 + CONT2)
     END IF
 
-    write(*,*) b
+!    write(*,*) b
 
     ! NON-EXECUTABLE STATEMENTS
 
@@ -732,9 +733,11 @@ contains
           5X,3X,3X,'Objective value:',33X,1PD12.5,/, &
           5X,3X,3X,'Feasibility:',37X,1PD12.5,/,&
           5X,3X,3X,'Gradient norm:',35X,1PD12.5)
-1002 FORMAT(5X,3X,'Penalization:',39X,D12.5,/, &
+1002 FORMAT(5X,3X,'Penalization:',39X,1PD12.5,/, &
           5X,3X,"Number of non-binding alpha's:",24X,I10,/, &
-          5X,3X,"Number of non-binding alpha''s:",23X,I10)
+          5X,3X,"Number of non-binding gamma's:",24X,I10,/, &
+          5X,3X,"||alpha||_inf:",38X,1PD12.5,/,&
+          5X,3X,"||gamma||_inf:",38X,1PD12.5)
 9000 FORMAT(5X,3X,'w^Tw:',47X,1PD12.5)
           
 
