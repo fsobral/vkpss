@@ -502,8 +502,8 @@ contains
 
     ! Parameters setting
 
-    epsfeas   = 1.0d-08
-    epsopt    = 1.0d-08
+    epsfeas   = 1.0d-06
+    epsopt    = 1.0d-06
 
     efstain   = sqrt( epsfeas )
     ! Disable early stopping criterium

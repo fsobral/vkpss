@@ -19,7 +19,7 @@ C     ARRAY ARGUMENTS
 C     LOCAL SCALARS
       logical OUTPUT
       integer MAXFCNT,NPT
-      double precision RBEG,REND,XEPS
+      double precision RBEG,REND,SVREPSMIN,XEPS
 
 C     EXTERNAL SUBROUTINES
       external EVALF,EVALC,EVALJAC,EVALHC
@@ -40,13 +40,16 @@ C     SETS DEFAULT PARAMETERS
       REND = 1.0D-4
       XEPS = 1.0D-8
 
+C     Perform 'exact' interpolation
+      SVREPSMIN = 1.0D-16
+
       OUTPUT = .true.
 
 C     CALLS THE TRUE SUBROUTINE
 
       CALL TRDFSUB(N,NPT,X,XL,XU,M,EQUATN,LINEAR,CCODED,EVALF,EVALC,
-     +             EVALJAC,EVALHC,MAXFCNT,RBEG,REND,XEPS,OUTPUT,
-     +             F,FEAS,FCNT)
+     +             EVALJAC,EVALHC,MAXFCNT,RBEG,REND,XEPS,SVREPSMIN,
+     +             OUTPUT,F,FEAS,FCNT)
 
       END
 
@@ -55,7 +58,7 @@ C     ******************************************************************
 
       SUBROUTINE FULLTRDF(N,NPT,X,XL,XU,M,EQUATN,LINEAR,CCODED,EVALF,
      +                    EVALC,EVALJAC,EVALHC,MAXFCNT,RBEG,REND,XEPS,
-     +                    OUTPUT,F,FEAS,FCNT)     
+     +                    SVREPSMIN,OUTPUT,F,FEAS,FCNT)     
 
       use trdf, only : trdfsub
 
@@ -67,7 +70,7 @@ C     implementation of TRDF
 C     SCALAR ARGUMENTS
       logical output
       integer m,maxfcnt,N,NPT,FCNT
-      double precision F,FEAS,RBEG,REND,XEPS
+      double precision F,FEAS,RBEG,REND,SVREPSMIN,XEPS
 
 C     ARRAY ARGUMENTS
       DOUBLE PRECISION  X(N),XL(N),XU(N)
@@ -78,7 +81,7 @@ C     EXTERNAL SUBROUTINES
 
 
       CALL TRDFSUB(N,NPT,X,XL,XU,M,EQUATN,LINEAR,CCODED,EVALF,EVALC,
-     +             EVALJAC,EVALHC,MAXFCNT,RBEG,REND,XEPS,OUTPUT,F,
-     +             FEAS,FCNT)
+     +             EVALJAC,EVALHC,MAXFCNT,RBEG,REND,XEPS,SVREPSMIN,
+     +             OUTPUT,F,FEAS,FCNT)
 
       END
