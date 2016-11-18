@@ -306,7 +306,7 @@ contains
   !                                                          !
   !----------------------------------------------------------!
 
-  subroutine qsvm(Y,FF,N,NPT,HQ,g,b)
+  subroutine qsvm(Y, FF, N, NPT, c, eps, HQ, g, b)
 
     implicit none
 
@@ -339,11 +339,14 @@ contains
     ! SCALAR ARGUMENTS
 
     integer :: N, NPT
-    real(8) :: b
+    real(8) :: b, c, eps
 
     ! ARRAY ARGUMENTS
 
     real(8) :: g(N), Y(NPT,N), FF(NPT), HQ(N,N)
+
+    intent(in   ) :: eps
+    intent(inout) :: c
 
     ! ALGENCAN VARIABLES
 
@@ -356,7 +359,7 @@ contains
     ! LOCAL SCALARS
 
     integer :: I, J, K, CONT1, CONT2, flag, status
-    real(8) :: AUX, XHX, gX, TOL, SOMAB, pen, absalpha, absgamma, wTw
+    real(8) :: AUX, XHX, gX, TOL, SOMAB, absalpha, absgamma, wTw
 
     ! LOCAL ARRAYS
 
@@ -446,8 +449,8 @@ contains
     ! VECTOR v       
 
     DO I = 1, NPT
-       v_(I)       = - FF(I) + EPS_SVR
-       v_(I + NPT) =   FF(I) + EPS_SVR !- v_(I)
+       v_(I)       = - FF(I) + eps
+       v_(I + NPT) =   FF(I) + eps
     END DO
 
     ! do i = 1, 2 * NPT
@@ -459,8 +462,6 @@ contains
     ! Set lower bounds, upper bounds, and initial guess
 
     ENE = 2 * NPT
-
-    pen = C_SVR
 
     ! Constraints
 
@@ -517,9 +518,9 @@ contains
 !    vparam(1) = 'OUTER-ITERATIONS-LIMIT 500'
 !    vparam(2) = 'ITERATIONS-OUTPUT-DETAIL 56'
 
-    DO I = 1, ENE
+010    DO I = 1, ENE
        l(I)   = 0.0D0
-       u(I)   = pen
+       u(I)   = c
     END DO
 
     do i = 1, NPT
@@ -687,7 +688,7 @@ contains
        END IF
     END DO
 
-    if ( OUTPUT ) write(*, FMT=1002) pen, CONT1, CONT2, absalpha, &
+    if ( OUTPUT ) write(*, FMT=1002) c, eps, CONT1, CONT2, absalpha, &
                                      absgamma
 
     !      DO I = 1, CONT2
@@ -708,17 +709,17 @@ contains
 
     IF ((CONT1 + CONT2) .EQ. 0 ) THEN
 
-!!$       if ( absalpha .gt. TOL .or. absgamma .gt. TOL ) then
-!!$          
-!!$          pen = pen * 10.0D0
-!!$
-!!$          goto 010
-!!$
-!!$       else
+       if ( absalpha .gt. TOL .or. absgamma .gt. TOL ) then
+          
+          c = c * 10.0D0
+
+          goto 010
+
+       else
 
           b = FF(1)
 
-!!$       end if
+       end if
 
     ELSE
        b = SOMAB / (CONT1 + CONT2)
@@ -734,6 +735,7 @@ contains
           5X,3X,3X,'Feasibility:',37X,1PD12.5,/,&
           5X,3X,3X,'Gradient norm:',35X,1PD12.5)
 1002 FORMAT(5X,3X,'Penalization:',39X,1PD12.5,/, &
+          5X,3X,'Eps:',48X,1PD12.5,/, &
           5X,3X,"Number of non-binding alpha's:",24X,I10,/, &
           5X,3X,"Number of non-binding gamma's:",24X,I10,/, &
           5X,3X,"||alpha||_inf:",38X,1PD12.5,/,&

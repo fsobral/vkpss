@@ -179,7 +179,7 @@ contains
     integer :: i,it,j,k,kn,flag
     real(8) :: alfa,beta,c,cnorm,delta,distsq,dsq,fopt,gama, &
          mindelta,rho,rhobeg,rhoend,sigm,sum,tau,tempofinal, &
-         tempoinicial, b, MOD_A, mf
+         tempoinicial, b, MOD_A, c_svr, eps_svr
 
     IF ( OUTPUT ) WRITE(*,3000)
 
@@ -199,6 +199,8 @@ contains
     IT     = 1
 
     call svr_set_output(OUTPUT)
+
+    c_svr = 1.0D+01
 
     !     ---------------------------
     !     Feasibility phase - Phase 0
@@ -246,7 +248,11 @@ contains
 
     ! Build SVR Model
 
-11  call qsvm(Y, FF, n, npt, HQ, g, b)
+    eps_svr = max(1.0D-16, min(5.0D-1 * rho * rho, 1.0D-1))
+
+    c_svr   = max(c_svr, 1.0D0 / (eps_svr * eps_svr))
+
+11  call qsvm(Y, FF, n, npt, c_svr, eps_svr, HQ, g, b)
 
     ! Initialize TRDF's structure
 
