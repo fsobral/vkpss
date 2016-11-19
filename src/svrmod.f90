@@ -867,27 +867,37 @@ contains
     real(8) :: x(n)
 
     ! LOCAL ARRAYS
-    real(8) :: Qx(n)
+!    real(8) :: Qx(n)
 
     ! LOCAL SCALARS
-    integer :: I, K
-    real(8) :: xQx, vx
+    integer :: j!I, K
+!    real(8) :: xQx, vx
 
     flag = 0
 
-    DO I = 1, n
-       Qx(I) = 0.0D0
-       DO K = 1, n
-          Qx(I) = Qx(I) + QQ_(I,K) * x(K)
-       END DO
-!       write(*,*) 'Q(',i,')=',Qx(i)
-    END DO
+    f = 0.0D0
 
-    xQx = dot_product(x, Qx)
+    do j = 1, n
 
-    vx  = dot_product(x, v_)
+       f = f + dot_product(QQ_(:,j), x) * x(j)
 
-    f = xQx / 2.0D0 + vx
+    end do
+
+    f = f / 2.0D0 + dot_product(x, v_)
+
+!     DO I = 1, n
+!        Qx(I) = 0.0D0
+!        DO K = 1, n
+!           Qx(I) = Qx(I) + QQ_(I,K) * x(K)
+!        END DO
+! !       write(*,*) 'Q(',i,')=',Qx(i)
+!     END DO
+
+!     xQx = dot_product(x, Qx)
+
+!     vx  = dot_product(x, v_)
+
+!     f = xQx / 2.0D0 + vx
 
 !    write(*,*) '---->',f, xQx, vx
 
