@@ -148,10 +148,10 @@ contains
     DO I = 1,N
        DO J = 1,N 
           Y(I + 1,    J) = X(J)
-          Y(I + 1,    I) = X(I) + DELTA 
           Y(I + N + 1,J) = X(J)
-          Y(I + N + 1,I) = X(I) - DELTA                 
        END DO
+       Y(I + 1,    I)    = X(I) + DELTA 
+       Y(I + N + 1,I)    = X(I) - DELTA 
     END DO   ! Y até 2n + 1
 
     !  PRINT*, "Y(1,2) = ", Y(1,2)
@@ -675,6 +675,7 @@ contains
 
        IF (ALFA(I) .GT. TOL) THEN
           IF (ALFA(I) .LT. (C_SVR - TOL)) THEN
+!          if ( (C_SVR - alfa(i)) / C_SVR .gt. TOL ) then
              CONT1 = CONT1 + 1
              BAUX1(CONT1) = FF(I) - M_VALUES(I) - EPS_SVR
           END IF
@@ -696,6 +697,7 @@ contains
 
        IF (GAMA(I) .GT. TOL) THEN
           IF (GAMA(I) .LT. (C_SVR - TOL)) THEN
+!          if ( (C_SVR - gama(i)) / C_SVR .gt. TOL ) then
              CONT2 = CONT2 + 1            
              BAUX2(CONT2) = FF(I) - M_VALUES(I) + EPS_SVR
           END IF
