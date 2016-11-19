@@ -152,12 +152,19 @@ C     CALLS THE ALGORITHM
       REND = 1.0D-4
       XEPS = 1.0D-8
 
-      SVRPENINI = 1.0D+20
-      SVRPENMAX = 1.0D+20
-      SVREPSINI = 1.5D-16
+      ! Fixed
+c$$$      SVRPENINI = 1.0D+20
+c$$$      SVRPENMAX = 1.0D+20
+c$$$      SVREPSINI = 1.5D-16
+c$$$      SVREPSMIN = 1.5D-16
+
+      ! Variable
+      SVRPENINI = 1.0D+04
+      SVRPENMAX = 1.0D+30
+      SVREPSINI = 1.0D-04
       SVREPSMIN = 1.5D-16
 
-      OUTPUT = .true.
+      OUTPUT = .false.
 
       CALL FULLTRDF(NN,NPT,XX,L,U,M,EQUATN,LINEAR,CCODED,CALOBJF,CALCON,
      +              CALJAC,CALHC,MAXFCNT,RBEG,REND,XEPS,SVREPSINI,
