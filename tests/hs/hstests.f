@@ -50,7 +50,8 @@ C     LOCAL SCALARS
       character OPTM
       logical OUTPUT
       integer FCNT,MAXFCNT
-      double precision C,F,FEAS,RBEG,REND,XEPS
+      double precision C,F,FEAS,RBEG,REND,SVREPSINI,SVREPSMIN,SVRPENINI,
+     +                 SVRPENMAX,XEPS
 
 C     WRITE(*,*) 'Number of the problem: '
       READ(*,*)NTP
@@ -151,11 +152,16 @@ C     CALLS THE ALGORITHM
       REND = 1.0D-4
       XEPS = 1.0D-8
 
+      SVRPENINI = 1.0D+20
+      SVRPENMAX = 1.0D+20
+      SVREPSINI = 1.5D-16
+      SVREPSMIN = 1.5D-16
+
       OUTPUT = .true.
 
       CALL FULLTRDF(NN,NPT,XX,L,U,M,EQUATN,LINEAR,CCODED,CALOBJF,CALCON,
-     +              CALJAC,CALHC,MAXFCNT,RBEG,REND,XEPS,OUTPUT,F,FEAS,
-     +              FCNT)
+     +              CALJAC,CALHC,MAXFCNT,RBEG,REND,XEPS,SVREPSINI,
+     +              SVREPSMIN,SVRPENINI,SVRPENMAX,OUTPUT,F,FEAS,FCNT)
 
       reldiff = (f - FEX) / max(1.0D0,abs(f),abs(FEX))
 

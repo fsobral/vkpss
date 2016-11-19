@@ -148,10 +148,10 @@ contains
     DO I = 1,N
        DO J = 1,N 
           Y(I + 1,    J) = X(J)
-          Y(I + 1,    I) = X(I) + DELTA 
           Y(I + N + 1,J) = X(J)
-          Y(I + N + 1,I) = X(I) - DELTA                 
        END DO
+       Y(I + 1,    I)    = X(I) + DELTA 
+       Y(I + N + 1,I)    = X(I) - DELTA 
     END DO   ! Y até 2n + 1
 
     !  PRINT*, "Y(1,2) = ", Y(1,2)
@@ -306,7 +306,7 @@ contains
   !                                                          !
   !----------------------------------------------------------!
 
-  subroutine qsvm(Y,FF,N,NPT,HQ,g,b)
+  subroutine qsvm(Y, FF, N, NPT, c, eps, HQ, g, b, flag)
 
     implicit none
 
@@ -338,12 +338,16 @@ contains
 
     ! SCALAR ARGUMENTS
 
-    integer :: N, NPT
-    real(8) :: b
+    integer :: N, NPT, flag
+    real(8) :: b, c, eps
 
     ! ARRAY ARGUMENTS
 
     real(8) :: g(N), Y(NPT,N), FF(NPT), HQ(N,N)
+
+    intent(in   ) :: eps
+    intent(out  ) :: flag
+    intent(inout) :: c
 
     ! ALGENCAN VARIABLES
 
@@ -355,8 +359,8 @@ contains
 
     ! LOCAL SCALARS
 
-    integer :: I, J, K, CONT1, CONT2, flag, status
-    real(8) :: AUX, XHX, gX, TOL, SOMAB, pen, absalpha, absgamma, wTw
+    integer :: I, J, K, CONT1, CONT2, status
+    real(8) :: AUX, XHX, gX, TOL, SOMAB, absalpha, absgamma, wTw
 
     ! LOCAL ARRAYS
 
@@ -383,6 +387,8 @@ contains
     !         PRINT*, "FF(",I,") = ", FF(I)
     !      END DO   
 
+    flag = 0
+
     if ( OUTPUT ) write(*,FMT=1000)
 
     call initialize(n, npt, status)
@@ -391,7 +397,7 @@ contains
 
        write(*,*) 'Memory problems when initializing SVR structure.'
 
-       flag = 99
+       flag = 3
 
        return
 
@@ -446,8 +452,8 @@ contains
     ! VECTOR v       
 
     DO I = 1, NPT
-       v_(I)       = - FF(I) + EPS_SVR
-       v_(I + NPT) =   FF(I) + EPS_SVR !- v_(I)
+       v_(I)       = - FF(I) + eps
+       v_(I + NPT) =   FF(I) + eps
     END DO
 
     ! do i = 1, 2 * NPT
@@ -459,8 +465,6 @@ contains
     ! Set lower bounds, upper bounds, and initial guess
 
     ENE = 2 * NPT
-
-    pen = C_SVR
 
     ! Constraints
 
@@ -498,8 +502,8 @@ contains
 
     ! Parameters setting
 
-    epsfeas   = 1.0d-05
-    epsopt    = 1.0d-05
+    epsfeas   = 1.0d-06
+    epsopt    = 1.0d-06
 
     efstain   = sqrt( epsfeas )
     ! Disable early stopping criterium
@@ -511,15 +515,16 @@ contains
     outputfnm = ''
     specfnm   = ''
 
-    nvparam = 1
+    nvparam = 2
     vparam(1) = 'SAFEMODE'
+    vparam(2) = 'LINEAR-SYSTEMS-SOLVER-IN-ACCELERATION-PROCESS MA57'
 !    vparam(1) = 'OBJECTIVE-AND-CONSTRAINTS-SCALING-AVOIDED'
 !    vparam(1) = 'OUTER-ITERATIONS-LIMIT 500'
 !    vparam(2) = 'ITERATIONS-OUTPUT-DETAIL 56'
 
-    DO I = 1, ENE
+010    DO I = 1, ENE
        l(I)   = 0.0D0
-       u(I)   = pen
+       u(I)   = c
     END DO
 
     do i = 1, NPT
@@ -535,6 +540,16 @@ contains
     checkder,f,cnorm,snorm,nlpsupn,inform)
 
     if ( OUTPUT ) write(*, FMT=1001) f, cnorm, nlpsupn
+
+    if ( inform .ne. 0 ) then
+
+       flag = 1
+
+       write(*,*) 'Error in the solver'
+
+       return
+
+    end if
     
     !      PRINT*, "ALGENCAN = ", f, cnorm, snorm, nlpsupn, inform
     !      pause
@@ -660,6 +675,7 @@ contains
 
        IF (ALFA(I) .GT. TOL) THEN
           IF (ALFA(I) .LT. (C_SVR - TOL)) THEN
+!          if ( (C_SVR - alfa(i)) / C_SVR .gt. TOL ) then
              CONT1 = CONT1 + 1
              BAUX1(CONT1) = FF(I) - M_VALUES(I) - EPS_SVR
           END IF
@@ -681,13 +697,14 @@ contains
 
        IF (GAMA(I) .GT. TOL) THEN
           IF (GAMA(I) .LT. (C_SVR - TOL)) THEN
+!          if ( (C_SVR - gama(i)) / C_SVR .gt. TOL ) then
              CONT2 = CONT2 + 1            
              BAUX2(CONT2) = FF(I) - M_VALUES(I) + EPS_SVR
           END IF
        END IF
     END DO
 
-    if ( OUTPUT ) write(*, FMT=1002) pen, CONT1, CONT2, absalpha, &
+    if ( OUTPUT ) write(*, FMT=1002) c, eps, CONT1, CONT2, absalpha, &
                                      absgamma
 
     !      DO I = 1, CONT2
@@ -708,17 +725,17 @@ contains
 
     IF ((CONT1 + CONT2) .EQ. 0 ) THEN
 
-!!$       if ( absalpha .gt. TOL .or. absgamma .gt. TOL ) then
-!!$          
-!!$          pen = pen * 10.0D0
-!!$
-!!$          goto 010
-!!$
-!!$       else
+       if ( absalpha .gt. TOL .or. absgamma .gt. TOL ) then
+          
+          c = c * 10.0D0
+
+          goto 010
+
+       else
 
           b = FF(1)
 
-!!$       end if
+       end if
 
     ELSE
        b = SOMAB / (CONT1 + CONT2)
@@ -734,6 +751,7 @@ contains
           5X,3X,3X,'Feasibility:',37X,1PD12.5,/,&
           5X,3X,3X,'Gradient norm:',35X,1PD12.5)
 1002 FORMAT(5X,3X,'Penalization:',39X,1PD12.5,/, &
+          5X,3X,'Eps:',48X,1PD12.5,/, &
           5X,3X,"Number of non-binding alpha's:",24X,I10,/, &
           5X,3X,"Number of non-binding gamma's:",24X,I10,/, &
           5X,3X,"||alpha||_inf:",38X,1PD12.5,/,&
@@ -851,27 +869,37 @@ contains
     real(8) :: x(n)
 
     ! LOCAL ARRAYS
-    real(8) :: Qx(n)
+!    real(8) :: Qx(n)
 
     ! LOCAL SCALARS
-    integer :: I, K
-    real(8) :: xQx, vx
+    integer :: j!I, K
+!    real(8) :: xQx, vx
 
     flag = 0
 
-    DO I = 1, n
-       Qx(I) = 0.0D0
-       DO K = 1, n
-          Qx(I) = Qx(I) + QQ_(I,K) * x(K)
-       END DO
-!       write(*,*) 'Q(',i,')=',Qx(i)
-    END DO
+    f = 0.0D0
 
-    xQx = dot_product(x, Qx)
+    do j = 1, n
 
-    vx  = dot_product(x, v_)
+       f = f + dot_product(QQ_(:,j), x) * x(j)
 
-    f = xQx / 2.0D0 + vx
+    end do
+
+    f = f / 2.0D0 + dot_product(x, v_)
+
+!     DO I = 1, n
+!        Qx(I) = 0.0D0
+!        DO K = 1, n
+!           Qx(I) = Qx(I) + QQ_(I,K) * x(K)
+!        END DO
+! !       write(*,*) 'Q(',i,')=',Qx(i)
+!     END DO
+
+!     xQx = dot_product(x, Qx)
+
+!     vx  = dot_product(x, v_)
+
+!     f = xQx / 2.0D0 + vx
 
 !    write(*,*) '---->',f, xQx, vx
 
