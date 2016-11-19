@@ -83,7 +83,8 @@ module trdf
 contains
 
   SUBROUTINE TRDFSUB(N,NPT,X,XL,XU,M,EQUATN,LINEAR,CCODED,EVALF_,EVALC_, &
-       EVALJAC_,EVALHC_,MAXFCNT,RBEG,REND,XEPS,SVREPSMIN,OUTPUT,F,FEAS,FCNT)     
+       EVALJAC_,EVALHC_,MAXFCNT,RBEG,REND,XEPS,SVREPSINI,SVREPSMIN,      &
+       SVRPENINI,SVRPENMAX,OUTPUT,F,FEAS,FCNT)
 
     ! This subroutine is the implementation of the Derivative-free
     ! Trust-region algorithm for constrained optimization described in
@@ -156,7 +157,8 @@ contains
     ! SCALAR ARGUMENTS
     logical :: OUTPUT
     integer :: m,maxfcnt,N,NPT,FCNT
-    real(8) :: F,FEAS,RBEG,REND,SVREPSMIN,XEPS
+    real(8) :: F,FEAS,RBEG,REND,SVREPSINI,SVREPSMIN,SVRPENINI,SVRPENMAX, &
+               XEPS
 
     ! ARRAY ARGUMENTS
     REAL(8) :: X(N),XL(N),XU(N)
@@ -166,7 +168,8 @@ contains
     external :: evalf_,evalc_,evaljac_,evalhc_
 
     intent(in   ) :: m,maxfcnt,n,npt,rbeg,rend,xeps,xl,xu,ccoded, &
-                     equatn,linear,svrepsmin
+                     equatn,linear,svrepsini,svrepsmin,svrpenini, &
+                     svrpenmax
     intent(out  ) :: f,feas,fcnt
     intent(inout) :: x
 
@@ -200,7 +203,7 @@ contains
 
     call svr_set_output(OUTPUT)
 
-    c_svr = 1.0D+01
+    c_svr = SVRPENINI
 
     !     ---------------------------
     !     Feasibility phase - Phase 0
@@ -250,9 +253,9 @@ contains
 
 11  continue
 
-    eps_svr = max(SVREPSMIN, min(5.0D-1 * rho * rho, 1.0D-1))
+    eps_svr = max(SVREPSMIN, min(5.0D-1 * rho * rho, SVREPSINI))
 
-    c_svr   = max(c_svr, 1.0D0 / eps_svr)
+    c_svr   = min(SVRPENMAX, max(c_svr, SVRPENINI / eps_svr))
 
     call qsvm(Y, FF, n, npt, c_svr, eps_svr, HQ, g, b, flag)
 
