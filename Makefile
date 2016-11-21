@@ -53,7 +53,8 @@ c_trdf: all
 	$(CC) -L$(SOLVERLIB) -L$(LIB) $(OBJ)/solver.o \
 	$(PROBLEM) $(LOPTS) -lgfortran -lm -o $(BIN)/$@
 
-# Hock-Schittkowski test set executable
+# Hock-Schittkowski test set executables
+
 hstests: all
 	$(MAKE) -C $(TES) hs
 
@@ -66,6 +67,13 @@ noisy-hstests: all
 
 	$(FC) -L$(SOLVERLIB) -L$(LIB) $(OBJ)/solver.o \
 	$(FCC) -I$(SRC) tests/hs/noisy-hstests.f -lhs $(LOPTS) \
+	-o $(BIN)/$@ 
+
+cnoisy-hstests: all
+	$(MAKE) -C $(TES) hs
+
+	$(FC) -L$(SOLVERLIB) -L$(LIB) $(OBJ)/solver.o \
+	$(FCC) -I$(SRC) tests/hs/cnoisy-hstests.f -lhs $(LOPTS) \
 	-o $(BIN)/$@ 
 
 clean:
