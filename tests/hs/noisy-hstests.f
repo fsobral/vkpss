@@ -49,7 +49,7 @@ C     LOCAL SCALARS
 
       character OPTM
       logical OUTPUT
-      integer FCNT,MAXFCNT
+      integer FCNT,MAXFCNT,FLAG
       double precision C,F,FEAS,RBEG,REND,SVREPSINI,SVREPSMIN,SVRPENINI,
      +                 SVRPENMAX,XEPS
 
@@ -148,27 +148,23 @@ C     CALLS THE ALGORITHM
 
       MAXFCNT = 100000
       
-      RBEG = 1.0D-1
-      REND = 1.0D-4
+      RBEG = 1.0D-0
+      REND = 1.0D-8
       XEPS = 1.0D-8
 
-      ! Fixed
-c$$$      SVRPENINI = 1.0D+20
-c$$$      SVRPENMAX = 1.0D+20
-c$$$      SVREPSINI = 1.5D-16
-c$$$      SVREPSMIN = 1.5D-16
-
       ! Variable
-      SVRPENINI = 1.0D+04
-      SVRPENMAX = 1.0D+30
-      SVREPSINI = 1.0D-04
-      SVREPSMIN = 1.5D-16
+      SVRPENINI = 1.0D+08
+      SVRPENMAX = 1.0D+08
+      SVREPSINI = 1.0D-01
+      SVREPSMIN = 1.0D-02
 
-      OUTPUT = .false.
+      OUTPUT = .true.
 
       CALL FULLTRDF(NN,NPT,XX,L,U,M,EQUATN,LINEAR,CCODED,CALOBJF,CALCON,
      +              CALJAC,CALHC,MAXFCNT,RBEG,REND,XEPS,SVREPSINI,
      +              SVREPSMIN,SVRPENINI,SVRPENMAX,OUTPUT,F,FEAS,FCNT)
+
+      call trueobjf(NN, XX, F, FLAG)
 
       reldiff = (f - FEX) / max(1.0D0,abs(f),abs(FEX))
 
@@ -283,9 +279,52 @@ C     PARAMETER
 
       xnorm = xnorm * BIGPRIME
 
-      f = FX + (2.0D0 * drandsc(xnorm) - 1.0D0) * 1.0D-03
+      f = FX + (2.0D0 * drandsc(xnorm) - 1.0D0) * 1.0D-02
 
       end subroutine calobjf
+
+C     ******************************************************************
+C     ******************************************************************
+
+      subroutine trueobjf(n,xx,f,flag)
+
+      implicit none
+
+#include "tr_params.par"
+
+!     SCALAR ARGUMENTS
+      integer flag,n
+      double precision f
+
+!     ARRAY ARGUMENTS
+      double precision xx(n)
+
+!     COMMON SCALARS
+      double precision FX
+
+!     COMMON ARRAYS
+      double precision X(NMAX)
+
+!     COMMON BLOCKS
+      common/L2/X
+      common/L6/FX
+
+!     LOCAL SCALARS
+      integer i
+
+      flag = 0
+
+      do i = 1,n
+
+         X(i) = xx(i)
+
+      end do
+
+      CALL CONV(2)
+
+      f = FX
+
+      end subroutine trueobjf
 
 C     ******************************************************************
 C     ******************************************************************
