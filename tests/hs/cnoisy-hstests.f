@@ -130,9 +130,6 @@ C     CODED SUBROUTINES FOR CONSTRAINTS' DERIVATIVES
       ccoded(1) = .true.
       ccoded(2) = .false.
 
-C     MAXIMUM NUMBER OF FUNCTION EVALUATIONS
-      MAXFCNT = 100000
-
 C     Some HS problems do not have derivatives of the constraints
       if ( NTP .eq. 348 .or. NTP .eq. 332 .or. NTP .eq. 365 .or. 
      +     NTP .eq. 362 .or. NTP .eq. 363 .or. NTP .eq. 364 .or.
@@ -166,8 +163,9 @@ C     CALLS THE ALGORITHM
      +     1.0D20,-1
       close(75)
 
-      MAXFCNT = 100000
-      
+C     MAXIMUM NUMBER OF FUNCTION EVALUATIONS
+      MAXFCNT = 2500 * nn
+
       RBEG = 1.0D-0
       REND = 1.0D-8
       XEPS = 1.0D-8
